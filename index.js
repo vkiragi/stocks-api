@@ -56,6 +56,11 @@ app.use('/price', apiProxySecretMiddleware);
 app.use('/news', apiProxySecretMiddleware);
 app.use('/radar', apiProxySecretMiddleware);
 
+// A public health-check endpoint that doesn't require a secret
+app.get('/ping', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
 app.get('/price', async (req, res) => {
     const { ticker } = req.query;
 
