@@ -7,6 +7,16 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY;
+const RAPIDAPI_PROXY_SECRET = process.env.RAPIDAPI_PROXY_SECRET;
+
+// Middleware to check for the RapidAPI proxy secret
+const apiProxySecretMiddleware = (req, res, next) => {
+    const proxySecret = req.get('X-RapidAPI-Proxy-Secret');
+    if (!proxySecret || proxySecret !== RAPIDAPI_PROXY_SECRET) {
+        return res.status(403).json({ error: 'Forbidden. You are not authorized to use this API directly.' });
+    }
+    next();
+};
 
 async function getPrice(ticker) {
     const url = `https://api.twelvedata.com/price?symbol=${ticker}&apikey=${TWELVE_DATA_API_KEY}`;
@@ -40,6 +50,11 @@ async function getNews(ticker) {
         return { headline: 'Could not fetch news.', url: '' };
     }
 }
+
+// Apply the security middleware to all API routes
+app.use('/price', apiProxySecretMiddleware);
+app.use('/news', apiProxySecretMiddleware);
+app.use('/radar', apiProxySecretMiddleware);
 
 app.get('/price', async (req, res) => {
     const { ticker } = req.query;
